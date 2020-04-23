@@ -7,4 +7,28 @@
 	<description>This is the binding for SynologyAudioStation.</description>
 	<author>Stefan Wunsch</author>
 
+	<config-description>
+		<parameter name="url" type="text">
+			<label>URL</label>
+			<description>URL of the Synology NAS hosting the Audio Station</description>
+			<required>true</required>
+		</parameter>
+		<parameter name="username" type="text">
+			<label>Username</label>
+			<description>Username on the Synology NAS</description>
+			<required>true</required>
+		</parameter>
+		<parameter name="password" type="text">
+			<context>password</context>
+			<label>Password</label>
+			<description>Password of the user on the Synology NAS</description>
+			<required>true</required>
+		</parameter>
+		<parameter name="refreshInterval" type="integer" min="0" max="9999" required="false">
+			<label>Refresh interval</label>
+			<description>Interval for refreshing the data in seconds (0=disabled)</description>
+			<default>2</default>
+		</parameter>
+	</config-description>
+
 </binding:binding>

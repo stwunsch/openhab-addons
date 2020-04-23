@@ -14,6 +14,8 @@ package org.openhab.binding.synologyaudiostation.internal;
 
 import static org.openhab.binding.synologyaudiostation.internal.SynologyAudioStationBindingConstants.*;
 
+import java.lang.String;
+
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
 import org.eclipse.smarthome.core.thing.ChannelUID;
@@ -38,8 +40,9 @@ public class SynologyAudioStationHandler extends BaseThingHandler {
 
     private @Nullable SynologyAudioStationConfiguration config;
 
-    public SynologyAudioStationHandler(Thing thing) {
+    public SynologyAudioStationHandler(Thing thing, String username, String password, String url, int refreshInterval) {
         super(thing);
+        logger.info("Create handler for user {} with URL {} and refresh interval {}", username, url, refreshInterval);
     }
 
     @Override
@@ -60,8 +63,8 @@ public class SynologyAudioStationHandler extends BaseThingHandler {
 
     @Override
     public void initialize() {
-        // logger.debug("Start initializing!");
         config = getConfigAs(SynologyAudioStationConfiguration.class);
+        logger.info("Start initializing remote player with name {}", config.name);
 
         // TODO: Initialize the handler.
         // The framework requires you to return from this method quickly. Also, before leaving this method a thing

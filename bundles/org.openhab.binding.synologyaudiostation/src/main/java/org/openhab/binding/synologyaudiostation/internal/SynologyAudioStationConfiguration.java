@@ -22,9 +22,5 @@ public class SynologyAudioStationConfiguration {
     /**
      * Sample configuration parameter. Replace with your own.
      */
-    public String url;
-    public int port;
-    public String username;
-    public String password;
-    public int refreshInterval;
+    public String name;
 }

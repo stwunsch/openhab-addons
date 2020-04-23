@@ -10,7 +10,13 @@
 	<config-description>
 		<parameter name="url" type="text">
 			<label>URL</label>
-			<description>URL of the Synology NAS hosting the Audio Station</description>
+			<description>URL of the Synology NAS hosting the Audio Station including the protocol (e.g. http://192.168.1.2)</description>
+			<required>true</required>
+		</parameter>
+		<parameter name="port" type="integer">
+			<label>Port</label>
+			<description>Port to access the Web API of the Synology NAS (5000 is the default for http)</description>
+			<default>5000</default>
 			<required>true</required>
 		</parameter>
 		<parameter name="username" type="text">
@@ -21,13 +27,14 @@
 		<parameter name="password" type="text">
 			<context>password</context>
 			<label>Password</label>
-			<description>Password of the user on the Synology NAS</description>
+			<description>Password of the user on the Synology NAS (two factor authentication is not supported)</description>
 			<required>true</required>
 		</parameter>
-		<parameter name="refreshInterval" type="integer" min="0" max="9999" required="false">
+		<parameter name="refreshInterval" type="integer" min="0" max="9999">
 			<label>Refresh interval</label>
 			<description>Interval for refreshing the data in seconds (0=disabled)</description>
 			<default>2</default>
+			<required>true</required>
 		</parameter>
 	</config-description>
 

@@ -40,9 +40,11 @@ public class SynologyAudioStationHandler extends BaseThingHandler {
 
     private @Nullable SynologyAudioStationConfiguration config;
 
+    SynologyAudioStationConnection connection;
+
     public SynologyAudioStationHandler(Thing thing, String username, String password, String url, int refreshInterval) {
         super(thing);
-        logger.info("Create handler for user {} with URL {} and refresh interval {}", username, url, refreshInterval);
+        this.connection = new SynologyAudioStationConnection(username, password, url);
     }
 
     @Override
@@ -81,8 +83,7 @@ public class SynologyAudioStationHandler extends BaseThingHandler {
 
         // Example for background initialization:
         scheduler.execute(() -> {
-            boolean thingReachable = true; // <background task with long running initialization here>
-            // when done do:
+            boolean thingReachable = connection.is_connected();
             if (thingReachable) {
                 updateStatus(ThingStatus.ONLINE);
             } else {
@@ -91,6 +92,7 @@ public class SynologyAudioStationHandler extends BaseThingHandler {
         });
 
         // logger.debug("Finished initializing!");
+        logger.info("Finish initialization of remote player with name {}", config.name);
 
         // Note: When initialization can NOT be done set the status with more details for further
         // analysis. See also class ThingStatusDetail for all available status details.

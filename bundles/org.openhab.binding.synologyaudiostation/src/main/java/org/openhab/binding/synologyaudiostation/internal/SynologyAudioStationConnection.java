@@ -50,6 +50,7 @@ public class SynologyAudioStationConnection {
     final private String password;
     final private String url;
     private String sid = "";
+    private String name = "";
 
     public SynologyAudioStationConnection(String username, String password, String url) {
         logger.info("Create Audio Station connection for user {} with URL {}", username, url);
@@ -77,6 +78,11 @@ public class SynologyAudioStationConnection {
             logger.info("Failed to connect ({})", e.getMessage());
             return false;
         }
+    }
+
+    public boolean set_name(String name) {
+        this.name = name;
+        return true;
     }
 
     private JsonElement get_data(String json) {

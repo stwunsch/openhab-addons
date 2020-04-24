@@ -10,7 +10,7 @@
 		<description>Remote player of a Synology Audio Station</description>
 
 		<channels>
-			<channel id="control" typeId="control-channel" />
+			<channel id="control" typeId="control" />
 		</channels>
 
 		<config-description>
@@ -23,10 +23,17 @@
 	</thing-type>
 
 	<!-- Sample Channel Type -->
-	<channel-type id="control-channel">
+	<channel-type id="control">
 		<item-type>String</item-type>
 		<label>Control channel</label>
 		<description>Channel to control a player</description>
+		<state>
+			<options>
+				<option value="play">Play</option>
+				<option value="pause">Pause</option>
+				<option value="stop">Stop</option>
+			</options>
+		</state>
 	</channel-type>
 
 </thing:thing-descriptions>

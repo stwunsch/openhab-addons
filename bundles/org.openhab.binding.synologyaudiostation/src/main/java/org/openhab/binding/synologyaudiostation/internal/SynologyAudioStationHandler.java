@@ -21,9 +21,11 @@ import org.eclipse.jdt.annotation.Nullable;
 import org.eclipse.smarthome.core.thing.ChannelUID;
 import org.eclipse.smarthome.core.thing.Thing;
 import org.eclipse.smarthome.core.thing.ThingStatus;
+import org.eclipse.smarthome.core.thing.ThingStatusDetail;
 import org.eclipse.smarthome.core.thing.binding.BaseThingHandler;
 import org.eclipse.smarthome.core.types.Command;
 import org.eclipse.smarthome.core.types.RefreshType;
+import org.eclipse.smarthome.core.library.types.StringType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -52,14 +54,19 @@ public class SynologyAudioStationHandler extends BaseThingHandler {
         if (CHANNEL_CONTROL.equals(channelUID.getId())) {
             if (command instanceof RefreshType) {
                 // TODO: handle data refresh
+                return;
             }
-
-            // TODO: handle command
-
-            // Note: if communication with thing fails for some reason,
-            // indicate that by setting the status with detail information:
-            // updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.COMMUNICATION_ERROR,
-            // "Could not control device at IP address x.x.x.x");
+            if (command instanceof StringType) {
+                String commandstr = command.toString();
+                if (commandstr.equals("play")) {
+                    logger.info("Play!");
+                    return;
+                } else {
+                    logger.info("Received unknown command {}", commandstr);
+                }
+            }
+            updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.COMMUNICATION_ERROR,
+                    "Failed to handle command " + command.toFullString());
         }
     }
 
@@ -83,11 +90,14 @@ public class SynologyAudioStationHandler extends BaseThingHandler {
 
         // Example for background initialization:
         scheduler.execute(() -> {
-            boolean thingReachable = connection.is_connected();
-            if (thingReachable) {
+            boolean is_connected = connection.is_connected();
+            boolean has_player = connection.set_name(config.name);
+            if (is_connected && has_player) {
                 updateStatus(ThingStatus.ONLINE);
             } else {
                 updateStatus(ThingStatus.OFFLINE);
+                logger.info("Failed to login remote player with name {} (has_player: {}, is_connected: {})",
+                        config.name, has_player, is_connected);
             }
         });
 

@@ -59,7 +59,8 @@ public class SynologyAudioStationHandler extends BaseThingHandler {
             if (command instanceof StringType) {
                 String commandstr = command.toString();
                 if (commandstr.equals("play")) {
-                    logger.info("Play!");
+                    return;
+                } else if (commandstr == null) {
                     return;
                 } else {
                     logger.info("Received unknown command {}", commandstr);

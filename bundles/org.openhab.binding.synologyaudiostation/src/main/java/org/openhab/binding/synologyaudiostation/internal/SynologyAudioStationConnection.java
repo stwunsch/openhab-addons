@@ -34,6 +34,7 @@ import org.eclipse.jetty.util.ssl.SslContextFactory;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import com.google.gson.JsonArray;
 
 /**
  * The {@link SynologyAudioStationConnection} is responsible for handling the connection to the Audio Station
@@ -49,8 +50,9 @@ public class SynologyAudioStationConnection {
     final private String username;
     final private String password;
     final private String url;
-    private String sid = "";
+    private String sessionId= "";
     private String name = "";
+    private String playerId = "";
 
     public SynologyAudioStationConnection(String username, String password, String url) {
         logger.info("Create Audio Station connection for user {} with URL {}", username, url);
@@ -82,7 +84,35 @@ public class SynologyAudioStationConnection {
 
     public boolean set_name(String name) {
         this.name = name;
-        return true;
+        String command = String.format("/webapi/AudioStation/remote_player.cgi?api=SYNO.AudioStation.RemotePlayer&version=2&method=list&_sid=%s", this.sessionId);
+        try {
+            String content = send_request(command);
+            this.playerId = get_player_id(content);
+            return true;
+        } catch (Exception e) {
+            logger.info("Failed to get player id for remote player {} ({})", name, e.getMessage());
+            return false;
+        }
+    }
+
+    private String get_player_id(String json) {
+        try {
+            JsonElement data = get_data(json);
+            JsonArray players = data.getAsJsonObject().get("players").getAsJsonArray();
+            for (JsonElement player : players) {
+                JsonObject obj = player.getAsJsonObject();
+                String name = obj.get("name").getAsString();
+                if (name.equals(this.name)) {
+                    String id = obj.get("id").getAsString();
+                    return id;
+                }
+            }
+            logger.info("Failed remote player {} in list of players", this.name);
+            throw new RuntimeException();
+        } catch (Exception e) {
+            logger.info("Failed parse json with player id for remote player {} ({})", this.name, e.getMessage());
+            throw new RuntimeException();
+        }
     }
 
     private JsonElement get_data(String json) {
@@ -105,7 +135,7 @@ public class SynologyAudioStationConnection {
         return data;
     }
 
-    private String get_sid(String json) {
+    private String get_session_id(String json) {
         try {
             JsonElement data = get_data(json);
             JsonObject obj = data.getAsJsonObject();
@@ -121,8 +151,8 @@ public class SynologyAudioStationConnection {
         String command = String.format("/webapi/auth.cgi?api=SYNO.API.Auth&method=login&version=3&account=%s&passwd=%s&session=AudioStation&format=sid", this.username, this.password);
         try {
             String content = send_request(command);
-            this.sid = get_sid(content);
-            logger.info("Logged in user {} with session id {}", this.username, this.sid);
+            this.sessionId = get_session_id(content);
+            logger.info("Logged in user {} with session id {}", this.username, this.sessionId);
             return true;
         } catch (Exception e) {
             logger.info("Failed to login user {} ({})", this.username, e.getMessage());

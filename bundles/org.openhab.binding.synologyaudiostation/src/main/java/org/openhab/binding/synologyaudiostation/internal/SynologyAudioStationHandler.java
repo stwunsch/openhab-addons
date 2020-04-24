@@ -59,6 +59,13 @@ public class SynologyAudioStationHandler extends BaseThingHandler {
             if (command instanceof StringType) {
                 String commandstr = command.toString();
                 if (commandstr.equals("play")) {
+                    connection.send_command(commandstr);
+                    return;
+                } else if (commandstr.equals("pause")) {
+                    connection.send_command(commandstr);
+                    return;
+                } else if (commandstr.equals("stop")) {
+                    connection.send_command(commandstr);
                     return;
                 } else if (commandstr == null) {
                     return;

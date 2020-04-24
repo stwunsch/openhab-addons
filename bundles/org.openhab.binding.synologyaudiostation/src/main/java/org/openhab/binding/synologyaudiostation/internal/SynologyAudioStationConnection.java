@@ -95,6 +95,15 @@ public class SynologyAudioStationConnection {
         }
     }
 
+    public void send_command(String action) {
+        String command = String.format("/webapi/AudioStation/remote_player.cgi?api=SYNO.AudioStation.RemotePlayer&version=2&method=control&_sid=%s&id=%s&action=%s", this.sessionId, this.playerId, action);
+        try {
+            send_request(command);
+        } catch (Exception e) {
+            logger.info("Failed to send command {} ({})", action, e.getMessage());
+        }
+    }
+
     private String get_player_id(String json) {
         try {
             JsonElement data = get_data(json);

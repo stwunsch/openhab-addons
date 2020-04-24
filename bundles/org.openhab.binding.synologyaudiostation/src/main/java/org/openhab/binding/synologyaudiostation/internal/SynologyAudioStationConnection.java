@@ -29,6 +29,7 @@ import static org.eclipse.jetty.http.HttpStatus.*;
 import org.eclipse.jetty.client.HttpClient;
 import org.eclipse.jetty.client.HttpResponseException;
 import org.eclipse.jetty.client.api.ContentResponse;
+import org.eclipse.jetty.util.ssl.SslContextFactory;
 
 /**
  * The {@link SynologyAudioStationConnection} is responsible for handling the connection to the Audio Station
@@ -47,33 +48,44 @@ public class SynologyAudioStationConnection {
 
     public SynologyAudioStationConnection(String username, String password, String url) {
         logger.info("Create Audio Station connection for user {} with URL {}", username, url);
-        this.httpClient = new HttpClient();
+        SslContextFactory sslContextFactory = new SslContextFactory(true);
+        this.httpClient = new HttpClient(sslContextFactory);
         this.username = username;
         this.password = password;
         this.url = url;
+        try {
+            this.httpClient.start();
+        } catch (Exception e) {
+            logger.info("Failed to start http client ({})", e.getMessage());
+            throw new RuntimeException();
+        }
     }
 
     public boolean is_connected() {
         try {
-            String data = send_request("");
+            send_request("");
             return true;
         } catch (Exception e) {
+            logger.info("Failed to connect ({})", e.getMessage());
             return false;
         }
     }
 
     private String send_request(String command) {
-        String request = url + "/" + command;
+        String request = url + command;
         final long timeout = 5;
-        logger.info("Send request {}", request);
+        logger.info("Send request {} with timeout of {} seconds", request, timeout);
         try {
-            ContentResponse contentResponse = httpClient.newRequest(url).method(GET).timeout(timeout, TimeUnit.SECONDS).send();
+            ContentResponse contentResponse = this.httpClient.newRequest(url).method(GET).timeout(timeout, TimeUnit.SECONDS).send();
             int httpStatus = contentResponse.getStatus();
+            if (httpStatus != OK_200) {
+                logger.info("Failed to send request (status {})", httpStatus);
+                throw new RuntimeException();
+            }
             String content = contentResponse.getContentAsString();
-            logger.info("Got response {} for request {}", httpStatus, request);
             return content;
         } catch (ExecutionException | InterruptedException | TimeoutException e) {
-            logger.info("Failed to send request {}", request);
+            logger.info("Failed to send request {} ({})", request, e.getMessage());
             throw new RuntimeException();
         }
     }

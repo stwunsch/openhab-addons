@@ -18,6 +18,8 @@ import java.lang.String;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
+import java.util.Map;
+import java.util.HashMap;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
@@ -68,8 +70,6 @@ public class SynologyAudioStationConnection {
             logger.info("Failed to start http client ({})", e.getMessage());
             throw new RuntimeException();
         }
-
-        login();
     }
 
     public boolean is_connected() {
@@ -111,6 +111,19 @@ public class SynologyAudioStationConnection {
         } catch (Exception e) {
             logger.info("Failed to set volume to {} ({})", volume, e.getMessage());
         }
+    }
+
+    public Map<String,String> get_status() {
+        Map<String,String> status = new HashMap<String,String>();
+        String command = String.format("/webapi/AudioStation/remote_player.cgi?api=SYNO.AudioStation.RemotePlayer&version=2&method=getstatus&_sid=%s&id=%s&additional=song_tag", this.sessionId, this.playerId);
+        try {
+            String content = send_request(command);
+            JsonElement data = get_data(content);
+            status.put("volume", data.getAsJsonObject().get("volume").getAsString());
+        } catch (Exception e) {
+            logger.info("Failed to update status with request {} ({})", command, e.getMessage());
+        }
+        return status;
     }
 
     private String get_player_id(String json) {
@@ -165,7 +178,7 @@ public class SynologyAudioStationConnection {
         }
     }
 
-    private boolean login() {
+    public boolean login() {
         String command = String.format("/webapi/auth.cgi?api=SYNO.API.Auth&method=login&version=3&account=%s&passwd=%s&session=AudioStation&format=sid", this.username, this.password);
         try {
             String content = send_request(command);
@@ -178,10 +191,15 @@ public class SynologyAudioStationConnection {
         }
     }
 
+    public boolean logout() {
+        // TODO
+        return true;
+    }
+
     private String send_request(String command) {
         String request = url + command;
         final long timeout = 5;
-        logger.info("Send request {}", request);
+        logger.debug("Send request {}", request);
         try {
             ContentResponse contentResponse = this.httpClient.newRequest(request).method(GET).timeout(timeout, TimeUnit.SECONDS).send();
             int httpStatus = contentResponse.getStatus();

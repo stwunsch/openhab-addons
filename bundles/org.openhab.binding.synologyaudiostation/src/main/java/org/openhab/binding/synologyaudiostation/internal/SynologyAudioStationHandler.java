@@ -17,6 +17,9 @@ import static org.openhab.binding.synologyaudiostation.internal.SynologyAudioSta
 import java.lang.String;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
@@ -45,19 +48,23 @@ public class SynologyAudioStationHandler extends BaseThingHandler {
 
     private @Nullable SynologyAudioStationConfiguration config;
 
+    private static final long INITIAL_DELAY_IN_SECONDS = 10;
+
     private SynologyAudioStationConnection connection;
+    private int refreshInterval;
     private final List<String> allowedCommands = Arrays.asList("play", "pause", "stop", "next", "prev");
+    private @Nullable ScheduledFuture<?> refreshJob;
 
     public SynologyAudioStationHandler(Thing thing, String username, String password, String url, int refreshInterval) {
         super(thing);
         this.connection = new SynologyAudioStationConnection(username, password, url);
+        this.refreshInterval = refreshInterval;
     }
 
     @Override
     public void handleCommand(ChannelUID channelUID, Command command) {
-        if (CHANNEL_CONTROL.equals(channelUID.getId())) {
+        if (CHANNEL_ACTION_CONTROL.equals(channelUID.getId())) {
             if (command instanceof RefreshType) {
-                // TODO: handle data refresh
                 return;
             }
             if (command instanceof StringType) {
@@ -75,9 +82,8 @@ public class SynologyAudioStationHandler extends BaseThingHandler {
                     "Failed to handle command " + command.toFullString());
             return;
         }
-        if (CHANNEL_VOLUME.equals(channelUID.getId())) {
+        if (CHANNEL_ACTION_VOLUME.equals(channelUID.getId())) {
             if (command instanceof RefreshType) {
-                // TODO: handle data refresh
                 return;
             }
             if (command instanceof DecimalType) {
@@ -89,6 +95,18 @@ public class SynologyAudioStationHandler extends BaseThingHandler {
                     "Failed to set volume from value " + command.toFullString());
             return;
         }
+        if (CHANNEL_GROUP_STATUS.equals(channelUID.getGroupId())) {
+            if (command instanceof RefreshType) {
+                updateStatus();
+                return;
+            }
+        }
+    }
+
+    private void updateStatus() {
+        Map<String,String> status = connection.get_status();
+        int volume = (int) Float.parseFloat(status.get("volume"));
+        updateState(CHANNEL_STATUS_VOLUME, new DecimalType(volume));
     }
 
     @Override
@@ -96,29 +114,26 @@ public class SynologyAudioStationHandler extends BaseThingHandler {
         config = getConfigAs(SynologyAudioStationConfiguration.class);
         logger.info("Start initializing remote player with name {}", config.name);
 
-        // TODO: Initialize the handler.
-        // The framework requires you to return from this method quickly. Also, before leaving this method a thing
-        // status from one of ONLINE, OFFLINE or UNKNOWN must be set. This might already be the real thing status in
-        // case you can decide it directly.
-        // In case you can not decide the thing status directly (e.g. for long running connection handshake using WAN
-        // access or similar) you should set status UNKNOWN here and then decide the real status asynchronously in the
-        // background.
-
-        // set the thing status to UNKNOWN temporarily and let the background task decide for the real status.
-        // the framework is then able to reuse the resources from the thing handler initialization.
-        // we set this upfront to reliably check status updates in unit tests.
+        // Initialize the handler.
         updateStatus(ThingStatus.UNKNOWN);
 
         // Example for background initialization:
         scheduler.execute(() -> {
             boolean is_connected = connection.is_connected();
+            boolean is_logged_in = connection.login();
             boolean has_player = connection.set_name(config.name);
-            if (is_connected && has_player) {
+            if (is_logged_in && is_connected && has_player) {
                 updateStatus(ThingStatus.ONLINE);
             } else {
                 updateStatus(ThingStatus.OFFLINE);
-                logger.info("Failed to login remote player with name {} (has_player: {}, is_connected: {})",
-                        config.name, has_player, is_connected);
+                logger.info("Failed to login remote player with name {} (is_logged_in: {}, has_player: {}, is_connected: {})",
+                        config.name, is_logged_in, has_player, is_connected);
+            }
+
+            if (refreshJob == null || refreshJob.isCancelled()) {
+                logger.debug("Start refresh job with interval of {} seconds", refreshInterval);
+                refreshJob = scheduler.scheduleWithFixedDelay(this::updateStatus, INITIAL_DELAY_IN_SECONDS,
+                        refreshInterval, TimeUnit.SECONDS);
             }
         });
 
@@ -130,5 +145,16 @@ public class SynologyAudioStationHandler extends BaseThingHandler {
         // Add a description to give user information to understand why thing does not work as expected. E.g.
         // updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.CONFIGURATION_ERROR,
         // "Can not access device as username and/or password are invalid");
+    }
+
+    @Override
+    public void dispose() {
+        logger.info("Dispose remote player with name {}", config.name);
+        if (refreshJob != null && !refreshJob.isCancelled()) {
+            if (refreshJob.cancel(true)) {
+                refreshJob = null;
+            }
+        }
+        connection.logout();
     }
 }

@@ -75,7 +75,7 @@ public class SynologyAudioStationHandler extends BaseThingHandler {
                     "Failed to handle command " + command.toFullString());
             return;
         }
-        if (CHANNEL_SETVOLUME.equals(channelUID.getId())) {
+        if (CHANNEL_VOLUME.equals(channelUID.getId())) {
             if (command instanceof RefreshType) {
                 // TODO: handle data refresh
                 return;

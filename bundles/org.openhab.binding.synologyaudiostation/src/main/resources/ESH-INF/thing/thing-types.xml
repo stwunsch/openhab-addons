@@ -9,10 +9,9 @@
 		<label>Remote player</label>
 		<description>Remote player of a Synology Audio Station</description>
 
-		<channels>
-			<channel id="control" typeId="control" />
-			<channel id="set_volume" typeId="set_volume" />
-		</channels>
+		<channel-groups>
+			<channel-group id="action" typeId="action" />
+		</channel-groups>
 
 		<config-description>
 			<parameter name="name" type="text" required="true">
@@ -23,10 +22,17 @@
 
 	</thing-type>
 
-	<!-- Sample Channel Type -->
+	<channel-group-type id="action">
+		<label>Action</label>
+		<channels>
+			<channel id="control" typeId="control" />
+			<channel id="volume" typeId="volume" />
+		</channels>
+	</channel-group-type>
+
 	<channel-type id="control">
 		<item-type>String</item-type>
-		<label>Control channel</label>
+		<label>Control player</label>
 		<description>Channel to control the player</description>
 		<state>
 			<options>
@@ -39,9 +45,9 @@
 		</state>
 	</channel-type>
 
-	<channel-type id="set_volume">
+	<channel-type id="volume">
 		<item-type>Number</item-type>
-		<label>Set volume channel</label>
+		<label>Set volume</label>
 		<description>Channel to set volume of the player</description>
 	</channel-type>
 

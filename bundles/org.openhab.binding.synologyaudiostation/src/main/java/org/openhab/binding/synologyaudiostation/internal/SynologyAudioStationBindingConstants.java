@@ -30,6 +30,6 @@ public class SynologyAudioStationBindingConstants {
     public static final ThingTypeUID THING_TYPE_REMOTEPLAYER = new ThingTypeUID(BINDING_ID, "remoteplayer");
 
     // List of all Channel ids
-    public static final String CHANNEL_CONTROL = "control";
-    public static final String CHANNEL_SETVOLUME = "set_volume";
+    public static final String CHANNEL_CONTROL = "action#control";
+    public static final String CHANNEL_VOLUME = "action#volume";
 }

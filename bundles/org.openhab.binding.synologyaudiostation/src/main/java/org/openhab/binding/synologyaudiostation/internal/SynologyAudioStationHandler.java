@@ -15,6 +15,8 @@ package org.openhab.binding.synologyaudiostation.internal;
 import static org.openhab.binding.synologyaudiostation.internal.SynologyAudioStationBindingConstants.*;
 
 import java.lang.String;
+import java.util.Arrays;
+import java.util.List;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
@@ -42,7 +44,8 @@ public class SynologyAudioStationHandler extends BaseThingHandler {
 
     private @Nullable SynologyAudioStationConfiguration config;
 
-    SynologyAudioStationConnection connection;
+    private SynologyAudioStationConnection connection;
+    private final List<String> allowedCommands = Arrays.asList("play", "pause", "stop", "next", "prev");
 
     public SynologyAudioStationHandler(Thing thing, String username, String password, String url, int refreshInterval) {
         super(thing);
@@ -58,13 +61,7 @@ public class SynologyAudioStationHandler extends BaseThingHandler {
             }
             if (command instanceof StringType) {
                 String commandstr = command.toString();
-                if (commandstr.equals("play")) {
-                    connection.send_command(commandstr);
-                    return;
-                } else if (commandstr.equals("pause")) {
-                    connection.send_command(commandstr);
-                    return;
-                } else if (commandstr.equals("stop")) {
+                if (allowedCommands.contains(commandstr)) {
                     connection.send_command(commandstr);
                     return;
                 } else if (commandstr == null) {

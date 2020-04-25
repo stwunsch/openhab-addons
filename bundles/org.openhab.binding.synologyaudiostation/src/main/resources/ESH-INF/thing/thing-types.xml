@@ -32,6 +32,8 @@
 				<option value="play">Play</option>
 				<option value="pause">Pause</option>
 				<option value="stop">Stop</option>
+				<option value="next">Next</option>
+				<option value="prev">Previous</option>
 			</options>
 		</state>
 	</channel-type>

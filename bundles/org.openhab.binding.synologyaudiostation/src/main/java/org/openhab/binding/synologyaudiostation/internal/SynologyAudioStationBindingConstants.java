@@ -35,4 +35,8 @@ public class SynologyAudioStationBindingConstants {
     public static final String CHANNEL_ACTION_VOLUME = "action#set_volume";
     public static final String CHANNEL_STATUS_VOLUME = "status#volume";
     public static final String CHANNEL_STATUS_STATE = "status#state";
+    public static final String CHANNEL_STATUS_TITLE = "status#title";
+    public static final String CHANNEL_STATUS_ARTIST = "status#artist";
+    public static final String CHANNEL_STATUS_ALBUM_ARTIST = "status#album_artist";
+    public static final String CHANNEL_STATUS_ALBUM = "status#album";
 }

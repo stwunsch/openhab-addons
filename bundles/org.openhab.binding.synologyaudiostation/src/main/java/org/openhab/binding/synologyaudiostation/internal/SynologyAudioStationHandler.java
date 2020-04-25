@@ -107,7 +107,12 @@ public class SynologyAudioStationHandler extends BaseThingHandler {
         Map<String,String> status = connection.get_status();
         int volume = (int) Float.parseFloat(status.get("volume"));
         updateState(CHANNEL_STATUS_VOLUME, new DecimalType(volume));
+        updateState(CHANNEL_ACTION_VOLUME, new DecimalType(volume));
         updateState(CHANNEL_STATUS_STATE , new StringType(status.get("state")));
+        updateState(CHANNEL_STATUS_ALBUM, new StringType(status.get("album")));
+        updateState(CHANNEL_STATUS_ALBUM_ARTIST, new StringType(status.get("album_artist")));
+        updateState(CHANNEL_STATUS_ARTIST, new StringType(status.get("artist")));
+        updateState(CHANNEL_STATUS_TITLE, new StringType(status.get("title")));
     }
 
     @Override

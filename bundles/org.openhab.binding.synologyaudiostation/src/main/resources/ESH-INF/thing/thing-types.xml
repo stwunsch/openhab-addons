@@ -36,6 +36,10 @@
 		<channels>
 			<channel id="volume" typeId="volume" />
 			<channel id="state" typeId="state" />
+			<channel id="artist" typeId="artist" />
+			<channel id="album_artist" typeId="album_artist" />
+			<channel id="album" typeId="album" />
+			<channel id="title" typeId="title" />
 		</channels>
 	</channel-group-type>
 
@@ -69,7 +73,31 @@
 	<channel-type id="state">
 		<item-type>String</item-type>
 		<label>State</label>
-		<description>State of the player</description>
+		<description>State of the player (playing, pause, stopped)</description>
+	</channel-type>
+
+	<channel-type id="artist">
+		<item-type>String</item-type>
+		<label>Artist</label>
+		<description>Artist of the current song</description>
+	</channel-type>
+
+	<channel-type id="album_artist">
+		<item-type>String</item-type>
+		<label>Album artist</label>
+		<description>Album artist of the current song</description>
+	</channel-type>
+
+	<channel-type id="title">
+		<item-type>String</item-type>
+		<label>Title</label>
+		<description>Title of the current song</description>
+	</channel-type>
+
+	<channel-type id="album">
+		<item-type>String</item-type>
+		<label>Album</label>
+		<description>Album of the current song</description>
 	</channel-type>
 
 </thing:thing-descriptions>

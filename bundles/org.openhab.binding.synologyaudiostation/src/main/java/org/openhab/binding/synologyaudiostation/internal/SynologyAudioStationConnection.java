@@ -104,6 +104,15 @@ public class SynologyAudioStationConnection {
         }
     }
 
+    public void set_volume(int volume) {
+        String command = String.format("/webapi/AudioStation/remote_player.cgi?api=SYNO.AudioStation.RemotePlayer&version=2&method=control&_sid=%s&id=%s&action=set_volume&value=%s", this.sessionId, this.playerId, volume);
+        try {
+            send_request(command);
+        } catch (Exception e) {
+            logger.info("Failed to set volume to {} ({})", volume, e.getMessage());
+        }
+    }
+
     private String get_player_id(String json) {
         try {
             JsonElement data = get_data(json);

@@ -11,11 +11,12 @@
 
 		<channels>
 			<channel id="control" typeId="control" />
+			<channel id="set_volume" typeId="set_volume" />
 		</channels>
 
 		<config-description>
 			<parameter name="name" type="text" required="true">
-				<label>Name</label>
+				<label>Player name</label>
 				<description>Name of the remote player</description>
 			</parameter>
 		</config-description>
@@ -26,7 +27,7 @@
 	<channel-type id="control">
 		<item-type>String</item-type>
 		<label>Control channel</label>
-		<description>Channel to control a player</description>
+		<description>Channel to control the player</description>
 		<state>
 			<options>
 				<option value="play">Play</option>
@@ -36,6 +37,12 @@
 				<option value="prev">Previous</option>
 			</options>
 		</state>
+	</channel-type>
+
+	<channel-type id="set_volume">
+		<item-type>Number</item-type>
+		<label>Set volume channel</label>
+		<description>Channel to set volume of the player</description>
 	</channel-type>
 
 </thing:thing-descriptions>

@@ -28,6 +28,7 @@ import org.eclipse.smarthome.core.thing.binding.BaseThingHandler;
 import org.eclipse.smarthome.core.types.Command;
 import org.eclipse.smarthome.core.types.RefreshType;
 import org.eclipse.smarthome.core.library.types.StringType;
+import org.eclipse.smarthome.core.library.types.DecimalType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -72,6 +73,21 @@ public class SynologyAudioStationHandler extends BaseThingHandler {
             }
             updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.COMMUNICATION_ERROR,
                     "Failed to handle command " + command.toFullString());
+            return;
+        }
+        if (CHANNEL_SETVOLUME.equals(channelUID.getId())) {
+            if (command instanceof RefreshType) {
+                // TODO: handle data refresh
+                return;
+            }
+            if (command instanceof DecimalType) {
+                int volume = (int) Float.parseFloat(command.toString());
+                connection.set_volume(volume);
+                return;
+            }
+            updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.COMMUNICATION_ERROR,
+                    "Failed to set volume from value " + command.toFullString());
+            return;
         }
     }
 

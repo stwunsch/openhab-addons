@@ -31,4 +31,5 @@ public class SynologyAudioStationBindingConstants {
 
     // List of all Channel ids
     public static final String CHANNEL_CONTROL = "control";
+    public static final String CHANNEL_SETVOLUME = "set_volume";
 }

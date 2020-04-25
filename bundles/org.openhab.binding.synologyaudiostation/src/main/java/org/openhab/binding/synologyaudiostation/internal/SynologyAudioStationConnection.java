@@ -120,6 +120,14 @@ public class SynologyAudioStationConnection {
             String content = send_request(command);
             JsonElement data = get_data(content);
             status.put("volume", data.getAsJsonObject().get("volume").getAsString());
+            status.put("state", data.getAsJsonObject().get("state").getAsString());
+            JsonElement song = data.getAsJsonObject().get("song");
+            status.put("title", song.getAsJsonObject().get("title").getAsString());
+            JsonElement additional = song.getAsJsonObject().get("additional");
+            JsonElement tag = additional.getAsJsonObject().get("song_tag");
+            status.put("album", tag.getAsJsonObject().get("album").getAsString());
+            status.put("album_artist", tag.getAsJsonObject().get("album_artist").getAsString());
+            status.put("artist", tag.getAsJsonObject().get("artist").getAsString());
         } catch (Exception e) {
             logger.info("Failed to update status with request {} ({})", command, e.getMessage());
         }

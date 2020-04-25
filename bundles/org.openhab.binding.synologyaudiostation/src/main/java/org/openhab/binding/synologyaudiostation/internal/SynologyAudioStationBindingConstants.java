@@ -31,9 +31,9 @@ public class SynologyAudioStationBindingConstants {
 
     // List of all Channel ids
     public static final String CHANNEL_GROUP_STATUS = "status";
+    public static final String CHANNEL_ACTION_PLAYER = "action#player";
     public static final String CHANNEL_ACTION_CONTROL = "action#control";
-    public static final String CHANNEL_ACTION_VOLUME = "action#set_volume";
-    public static final String CHANNEL_STATUS_VOLUME = "status#volume";
+    public static final String CHANNEL_ACTION_VOLUME = "action#volume";
     public static final String CHANNEL_STATUS_STATE = "status#state";
     public static final String CHANNEL_STATUS_TITLE = "status#title";
     public static final String CHANNEL_STATUS_ARTIST = "status#artist";

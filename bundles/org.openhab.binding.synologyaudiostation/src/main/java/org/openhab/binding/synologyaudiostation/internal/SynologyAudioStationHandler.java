@@ -30,8 +30,11 @@ import org.eclipse.smarthome.core.thing.ThingStatusDetail;
 import org.eclipse.smarthome.core.thing.binding.BaseThingHandler;
 import org.eclipse.smarthome.core.types.Command;
 import org.eclipse.smarthome.core.types.RefreshType;
+import org.eclipse.smarthome.core.library.types.PlayPauseType;
+import org.eclipse.smarthome.core.library.types.NextPreviousType;
 import org.eclipse.smarthome.core.library.types.StringType;
 import org.eclipse.smarthome.core.library.types.DecimalType;
+import org.eclipse.smarthome.core.library.types.PercentType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -63,8 +66,34 @@ public class SynologyAudioStationHandler extends BaseThingHandler {
 
     @Override
     public void handleCommand(ChannelUID channelUID, Command command) {
+        if (CHANNEL_ACTION_PLAYER.equals(channelUID.getId())) {
+            if (command instanceof RefreshType) {
+                updateStatus();
+                return;
+            }
+            if (command instanceof PlayPauseType) {
+                if (command == PlayPauseType.PLAY) {
+                    connection.send_command("play");
+                } else if (command == PlayPauseType.PAUSE) {
+                    connection.send_command("pause");
+                }
+                return;
+            }
+            if (command instanceof NextPreviousType) {
+                if (command == NextPreviousType.NEXT) {
+                    connection.send_command("next");
+                } else if (command == NextPreviousType.PREVIOUS) {
+                    connection.send_command("prev");
+                }
+                return;
+            }
+            updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.COMMUNICATION_ERROR,
+                    "Failed to handle player command " + command.toFullString());
+            return;
+        }
         if (CHANNEL_ACTION_CONTROL.equals(channelUID.getId())) {
             if (command instanceof RefreshType) {
+                updateStatus();
                 return;
             }
             if (command instanceof StringType) {
@@ -79,16 +108,19 @@ public class SynologyAudioStationHandler extends BaseThingHandler {
                 }
             }
             updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.COMMUNICATION_ERROR,
-                    "Failed to handle command " + command.toFullString());
+                    "Failed to handle control command " + command.toFullString());
             return;
         }
         if (CHANNEL_ACTION_VOLUME.equals(channelUID.getId())) {
             if (command instanceof RefreshType) {
+                updateStatus();
                 return;
             }
             if (command instanceof DecimalType) {
                 int volume = (int) Float.parseFloat(command.toString());
-                connection.set_volume(volume);
+                if (volume >= 0 && volume <= 100) {
+                    connection.set_volume(volume);
+                }
                 return;
             }
             updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.COMMUNICATION_ERROR,
@@ -100,15 +132,21 @@ public class SynologyAudioStationHandler extends BaseThingHandler {
                 updateStatus();
                 return;
             }
+            updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.COMMUNICATION_ERROR,
+                    "Failed to handle status command " + command.toFullString());
         }
     }
 
     private void updateStatus() {
         Map<String,String> status = connection.get_status();
-        int volume = (int) Float.parseFloat(status.get("volume"));
-        updateState(CHANNEL_STATUS_VOLUME, new DecimalType(volume));
-        updateState(CHANNEL_ACTION_VOLUME, new DecimalType(volume));
-        updateState(CHANNEL_STATUS_STATE , new StringType(status.get("state")));
+        String state = status.get("state");
+        if (state.equals("playing")) {
+            updateState(CHANNEL_ACTION_PLAYER, PlayPauseType.PLAY);
+        } else if (state.equals("pause") || state.equals("stopped")) {
+            updateState(CHANNEL_ACTION_PLAYER, PlayPauseType.PAUSE);
+        }
+        updateState(CHANNEL_ACTION_VOLUME, new PercentType(status.get("volume")));
+        updateState(CHANNEL_STATUS_STATE , new StringType(state));
         updateState(CHANNEL_STATUS_ALBUM, new StringType(status.get("album")));
         updateState(CHANNEL_STATUS_ALBUM_ARTIST, new StringType(status.get("album_artist")));
         updateState(CHANNEL_STATUS_ARTIST, new StringType(status.get("artist")));

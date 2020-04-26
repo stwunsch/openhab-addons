@@ -138,7 +138,13 @@ public class SynologyAudioStationHandler extends BaseThingHandler {
     }
 
     private void updateStatus() {
-        Map<String,String> status = connection.get_status();
+        Map<String,String> status;
+        try {
+            status = connection.get_status();
+        } catch (Exception e) {
+            logger.info("Failed to update status ({})", e.getMessage());
+            return;
+        }
         String state = status.get("state");
         if (state.equals("playing")) {
             updateState(CHANNEL_ACTION_PLAYER, PlayPauseType.PLAY);

@@ -51,7 +51,7 @@ public class SynologyAudioStationHandler extends BaseThingHandler {
 
     private @Nullable SynologyAudioStationConfiguration config;
 
-    private static final long INITIAL_DELAY_IN_SECONDS = 10;
+    private static final long INITIAL_DELAY_IN_SECONDS = 30;
 
     private SynologyAudioStationConnection connection;
     private int refreshInterval;
@@ -138,25 +138,31 @@ public class SynologyAudioStationHandler extends BaseThingHandler {
     }
 
     private void updateStatus() {
-        Map<String,String> status;
+        Map<String,String> status = null;
         try {
             status = connection.get_status();
         } catch (Exception e) {
-            logger.info("Failed to update status ({})", e.getMessage());
+            logger.info("Failed to get new status ({})", e.getMessage());
             return;
         }
-        String state = status.get("state");
-        if (state.equals("playing")) {
-            updateState(CHANNEL_ACTION_PLAYER, PlayPauseType.PLAY);
-        } else if (state.equals("pause") || state.equals("stopped")) {
-            updateState(CHANNEL_ACTION_PLAYER, PlayPauseType.PAUSE);
+        try {
+            status = connection.get_status();
+            String state = status.get("state");
+            if (state.equals("playing")) {
+                updateState(CHANNEL_ACTION_PLAYER, PlayPauseType.PLAY);
+            } else if (state.equals("pause") || state.equals("stopped")) {
+                updateState(CHANNEL_ACTION_PLAYER, PlayPauseType.PAUSE);
+            }
+            updateState(CHANNEL_ACTION_VOLUME, new PercentType(status.get("volume")));
+            updateState(CHANNEL_STATUS_STATE , new StringType(state));
+            updateState(CHANNEL_STATUS_ALBUM, new StringType(status.get("album")));
+            updateState(CHANNEL_STATUS_ALBUM_ARTIST, new StringType(status.get("album_artist")));
+            updateState(CHANNEL_STATUS_ARTIST, new StringType(status.get("artist")));
+            updateState(CHANNEL_STATUS_TITLE, new StringType(status.get("title")));
+        } catch (Exception e) {
+            logger.info("Failed to set new status ({})", e.getMessage());
+            return;
         }
-        updateState(CHANNEL_ACTION_VOLUME, new PercentType(status.get("volume")));
-        updateState(CHANNEL_STATUS_STATE , new StringType(state));
-        updateState(CHANNEL_STATUS_ALBUM, new StringType(status.get("album")));
-        updateState(CHANNEL_STATUS_ALBUM_ARTIST, new StringType(status.get("album_artist")));
-        updateState(CHANNEL_STATUS_ARTIST, new StringType(status.get("artist")));
-        updateState(CHANNEL_STATUS_TITLE, new StringType(status.get("title")));
     }
 
     @Override

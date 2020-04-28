@@ -39,14 +39,14 @@ import com.google.gson.JsonParser;
 import com.google.gson.JsonArray;
 
 /**
- * The {@link SynologyAudioStationConnection} is responsible for handling the connection to the Audio Station
+ * The {@link SynologyAudioStationConnector} is responsible for handling the connection to the Audio Station
  *
  * @author Stefan Wunsch - Initial contribution
  */
 @NonNullByDefault
-public class SynologyAudioStationConnection {
+public class SynologyAudioStationConnector {
 
-    private final Logger logger = LoggerFactory.getLogger(SynologyAudioStationConnection.class);
+    private final Logger logger = LoggerFactory.getLogger(SynologyAudioStationConnector.class);
 
     final private HttpClient httpClient;
     final private String username;
@@ -56,16 +56,16 @@ public class SynologyAudioStationConnection {
     private String name = "";
     private String playerId = "";
 
-    public SynologyAudioStationConnection(String username, String password, String url) {
+    public SynologyAudioStationConnector(String username, String password, String url) {
         logger.info("Create Audio Station connection for user {} with URL {}", username, url);
         this.username = username;
         this.password = password;
         this.url = url;
 
         SslContextFactory sslContextFactory = new SslContextFactory(true);
-        this.httpClient = new HttpClient(sslContextFactory);
+        httpClient = new HttpClient(sslContextFactory);
         try {
-            this.httpClient.start();
+            httpClient.start();
         } catch (Exception e) {
             logger.info("Failed to start http client ({})", e.getMessage());
             throw new RuntimeException();
@@ -99,7 +99,7 @@ public class SynologyAudioStationConnection {
 
     public boolean set_name(String name) {
         this.name = name;
-        String command = String.format("/webapi/AudioStation/remote_player.cgi?api=SYNO.AudioStation.RemotePlayer&version=2&method=list&_sid=%s", this.sessionId);
+        String command = String.format("/webapi/AudioStation/remote_player.cgi?api=SYNO.AudioStation.RemotePlayer&version=2&method=list&_sid=%s", sessionId);
         try {
             String content = send_request(command);
             this.playerId = get_player_id(content);
@@ -111,7 +111,7 @@ public class SynologyAudioStationConnection {
     }
 
     public void send_command(String action) {
-        String command = String.format("/webapi/AudioStation/remote_player.cgi?api=SYNO.AudioStation.RemotePlayer&version=2&method=control&_sid=%s&id=%s&action=%s", this.sessionId, this.playerId, action);
+        String command = String.format("/webapi/AudioStation/remote_player.cgi?api=SYNO.AudioStation.RemotePlayer&version=2&method=control&_sid=%s&id=%s&action=%s", sessionId, playerId, action);
         try {
             send_request(command);
         } catch (Exception e) {
@@ -120,7 +120,7 @@ public class SynologyAudioStationConnection {
     }
 
     public void set_volume(int volume) {
-        String command = String.format("/webapi/AudioStation/remote_player.cgi?api=SYNO.AudioStation.RemotePlayer&version=2&method=control&_sid=%s&id=%s&action=set_volume&value=%s", this.sessionId, this.playerId, volume);
+        String command = String.format("/webapi/AudioStation/remote_player.cgi?api=SYNO.AudioStation.RemotePlayer&version=2&method=control&_sid=%s&id=%s&action=set_volume&value=%s", sessionId, playerId, volume);
         try {
             send_request(command);
         } catch (Exception e) {
@@ -130,7 +130,7 @@ public class SynologyAudioStationConnection {
 
     public Map<String,String> get_status() {
         Map<String,String> status = new HashMap<String,String>();
-        String command = String.format("/webapi/AudioStation/remote_player.cgi?api=SYNO.AudioStation.RemotePlayer&version=2&method=getstatus&_sid=%s&id=%s&additional=song_tag", this.sessionId, this.playerId);
+        String command = String.format("/webapi/AudioStation/remote_player.cgi?api=SYNO.AudioStation.RemotePlayer&version=2&method=getstatus&_sid=%s&id=%s&additional=song_tag", sessionId, playerId);
         try {
             String content = send_request(command);
             JsonElement data = get_data(content);
@@ -203,20 +203,25 @@ public class SynologyAudioStationConnection {
     }
 
     public boolean login() {
-        String command = String.format("/webapi/auth.cgi?api=SYNO.API.Auth&method=login&version=3&account=%s&passwd=%s&session=AudioStation&format=sid", this.username, this.password);
+        String command = String.format("/webapi/auth.cgi?api=SYNO.API.Auth&method=login&version=3&account=%s&passwd=%s&session=AudioStation&format=sid", username, password);
         try {
             String content = send_request(command);
-            this.sessionId = get_session_id(content);
-            logger.info("Logged in user {} with session id {}", this.username, this.sessionId);
+            sessionId = get_session_id(content);
+            logger.info("Logged in user {}", username);
             return true;
         } catch (Exception e) {
-            logger.info("Failed to login user {} ({})", this.username, e.getMessage());
+            logger.info("Failed to login user {} ({})", username, e.getMessage());
             return false;
         }
     }
 
     public boolean logout() {
-        // TODO
+        String command = String.format("/webapi/auth.cgi?api=SYNO.API.Auth&method=login&version=1&method=logout&_sid=%s&session=AudioStation", sessionId);
+        try {
+        } catch (Exception e) {
+            logger.info("Failed to logout user {} ({})", username, e.getMessage());
+            return false;
+        }
         return true;
     }
 
@@ -225,7 +230,7 @@ public class SynologyAudioStationConnection {
         final long timeout = 5;
         logger.debug("Send request {}", request);
         try {
-            ContentResponse contentResponse = this.httpClient.newRequest(request).method(GET).timeout(timeout, TimeUnit.SECONDS).send();
+            ContentResponse contentResponse = httpClient.newRequest(request).method(GET).timeout(timeout, TimeUnit.SECONDS).send();
             int httpStatus = contentResponse.getStatus();
             if (httpStatus != OK_200) {
                 logger.info("Failed to send request (status {})", httpStatus);

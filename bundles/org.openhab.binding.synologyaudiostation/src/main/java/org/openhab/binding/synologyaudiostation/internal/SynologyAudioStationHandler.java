@@ -53,14 +53,14 @@ public class SynologyAudioStationHandler extends BaseThingHandler {
 
     private static final long INITIAL_DELAY_IN_SECONDS = 30;
 
-    private @Nullable SynologyAudioStationConnection connection = null;
+    private @Nullable SynologyAudioStationConnector connection = null;
     private int refreshInterval;
     private final List<String> allowedCommands = Arrays.asList("play", "pause", "stop", "next", "prev");
     private @Nullable ScheduledFuture<?> refreshJob;
 
     public SynologyAudioStationHandler(Thing thing, String username, String password, String url, int refreshInterval) {
         super(thing);
-        this.connection = new SynologyAudioStationConnection(username, password, url);
+        this.connection = new SynologyAudioStationConnector(username, password, url);
         this.refreshInterval = refreshInterval;
     }
 

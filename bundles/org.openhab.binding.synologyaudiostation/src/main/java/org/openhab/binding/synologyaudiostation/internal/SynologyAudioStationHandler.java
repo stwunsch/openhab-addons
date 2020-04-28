@@ -53,7 +53,7 @@ public class SynologyAudioStationHandler extends BaseThingHandler {
 
     private static final long INITIAL_DELAY_IN_SECONDS = 30;
 
-    private SynologyAudioStationConnection connection;
+    private @Nullable SynologyAudioStationConnection connection = null;
     private int refreshInterval;
     private final List<String> allowedCommands = Arrays.asList("play", "pause", "stop", "next", "prev");
     private @Nullable ScheduledFuture<?> refreshJob;
@@ -68,7 +68,7 @@ public class SynologyAudioStationHandler extends BaseThingHandler {
     public void handleCommand(ChannelUID channelUID, Command command) {
         if (CHANNEL_ACTION_PLAYER.equals(channelUID.getId())) {
             if (command instanceof RefreshType) {
-                updateStatus();
+                updatePlayerStatus();
                 return;
             }
             if (command instanceof PlayPauseType) {
@@ -93,7 +93,7 @@ public class SynologyAudioStationHandler extends BaseThingHandler {
         }
         if (CHANNEL_ACTION_CONTROL.equals(channelUID.getId())) {
             if (command instanceof RefreshType) {
-                updateStatus();
+                updatePlayerStatus();
                 return;
             }
             if (command instanceof StringType) {
@@ -113,7 +113,7 @@ public class SynologyAudioStationHandler extends BaseThingHandler {
         }
         if (CHANNEL_ACTION_VOLUME.equals(channelUID.getId())) {
             if (command instanceof RefreshType) {
-                updateStatus();
+                updatePlayerStatus();
                 return;
             }
             if (command instanceof DecimalType) {
@@ -129,7 +129,7 @@ public class SynologyAudioStationHandler extends BaseThingHandler {
         }
         if (CHANNEL_GROUP_STATUS.equals(channelUID.getGroupId())) {
             if (command instanceof RefreshType) {
-                updateStatus();
+                updatePlayerStatus();
                 return;
             }
             updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.COMMUNICATION_ERROR,
@@ -137,7 +137,19 @@ public class SynologyAudioStationHandler extends BaseThingHandler {
         }
     }
 
-    private void updateStatus() {
+    private void updatePlayerStatus() {
+        if (connection == null) {
+            logger.info("Don't update player status because connection is not yet established");
+            return;
+        }
+        if (!connection.is_logged_in()) {
+            logger.info("Don't update player status because connection is not yet logged in");
+            return;
+        }
+        if (!connection.has_player()) {
+            logger.info("Don't update player status because connection has not yet retrieved the player");
+            return;
+        }
         Map<String,String> status = null;
         try {
             status = connection.get_status();
@@ -188,7 +200,7 @@ public class SynologyAudioStationHandler extends BaseThingHandler {
 
             if (refreshJob == null || refreshJob.isCancelled()) {
                 logger.debug("Start refresh job with interval of {} seconds", refreshInterval);
-                refreshJob = scheduler.scheduleWithFixedDelay(this::updateStatus, INITIAL_DELAY_IN_SECONDS,
+                refreshJob = scheduler.scheduleWithFixedDelay(this::updatePlayerStatus, INITIAL_DELAY_IN_SECONDS,
                         refreshInterval, TimeUnit.SECONDS);
             }
         });

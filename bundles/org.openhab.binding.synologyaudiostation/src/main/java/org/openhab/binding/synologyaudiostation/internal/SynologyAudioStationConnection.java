@@ -82,6 +82,21 @@ public class SynologyAudioStationConnection {
         }
     }
 
+    public boolean is_logged_in() {
+        if (sessionId == "") return false;
+        return true;
+    }
+
+    public boolean has_player() {
+        if (playerId == "") return false;
+        return true;
+    }
+
+    public boolean is_valid() {
+        if (is_logged_in() && has_player()) return true;
+        return false;
+    }
+
     public boolean set_name(String name) {
         this.name = name;
         String command = String.format("/webapi/AudioStation/remote_player.cgi?api=SYNO.AudioStation.RemotePlayer&version=2&method=list&_sid=%s", this.sessionId);
@@ -130,6 +145,7 @@ public class SynologyAudioStationConnection {
             status.put("artist", tag.getAsJsonObject().get("artist").getAsString());
         } catch (Exception e) {
             logger.info("Failed to update status with request {} ({})", command, e.getMessage());
+            throw new RuntimeException();
         }
         return status;
     }

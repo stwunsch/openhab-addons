@@ -29,7 +29,6 @@ import org.eclipse.smarthome.core.thing.binding.ThingHandler;
 import org.eclipse.smarthome.core.thing.binding.ThingHandlerFactory;
 import org.osgi.service.component.ComponentContext;
 import org.osgi.service.component.annotations.Component;
-import org.osgi.service.component.annotations.Activate;
 
 
 /**

@@ -53,9 +53,9 @@ public class SynologyAudioStationHandler extends BaseThingHandler {
 
     private static final long INITIAL_DELAY_IN_SECONDS = 30;
 
-    private @Nullable SynologyAudioStationConnector connection = null;
-    private int refreshInterval;
-    private final List<String> allowedCommands = Arrays.asList("play", "pause", "stop", "next", "prev");
+    final private @NonNullByDefault SynologyAudioStationConnector connection;
+    final private int refreshInterval;
+    final private List<String> allowedCommands = Arrays.asList("play", "pause", "stop", "next", "prev");
     private @Nullable ScheduledFuture<?> refreshJob;
 
     public SynologyAudioStationHandler(Thing thing, String username, String password, String url, int refreshInterval) {
@@ -104,7 +104,7 @@ public class SynologyAudioStationHandler extends BaseThingHandler {
                 } else if (commandstr == null) {
                     return;
                 } else {
-                    logger.info("Received unknown command {}", commandstr);
+                    logger.warn("Received unknown command {}", commandstr);
                 }
             }
             updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.COMMUNICATION_ERROR,
@@ -138,23 +138,19 @@ public class SynologyAudioStationHandler extends BaseThingHandler {
     }
 
     private void updatePlayerStatus() {
-        if (connection == null) {
-            logger.info("Don't update player status because connection is not yet established");
-            return;
-        }
         if (!connection.is_logged_in()) {
-            logger.info("Don't update player status because connection is not yet logged in");
+            logger.warn("Don't update player status because user is not (yet) logged in");
             return;
         }
         if (!connection.has_player()) {
-            logger.info("Don't update player status because connection has not yet retrieved the player");
+            logger.warn("Don't update player status because connection has not (yet) retrieved the player");
             return;
         }
         Map<String,String> status = null;
         try {
             status = connection.get_status();
         } catch (Exception e) {
-            logger.info("Failed to get new status ({})", e.getMessage());
+            logger.warn("Failed to get new status ({})", e.getMessage());
             return;
         }
         try {
@@ -172,7 +168,7 @@ public class SynologyAudioStationHandler extends BaseThingHandler {
             updateState(CHANNEL_STATUS_ARTIST, new StringType(status.get("artist")));
             updateState(CHANNEL_STATUS_TITLE, new StringType(status.get("title")));
         } catch (Exception e) {
-            logger.info("Failed to set new status ({})", e.getMessage());
+            logger.warn("Failed to set new status ({})", e.getMessage());
             return;
         }
     }
@@ -180,12 +176,12 @@ public class SynologyAudioStationHandler extends BaseThingHandler {
     @Override
     public void initialize() {
         config = getConfigAs(SynologyAudioStationConfiguration.class);
-        logger.info("Start initializing remote player with name {}", config.name);
+        logger.debug("Start initializing remote player with name {}", config.name);
 
         // Initialize the handler.
         updateStatus(ThingStatus.UNKNOWN);
 
-        // Example for background initialization:
+        // Initialize the connection in the background
         scheduler.execute(() -> {
             boolean is_connected = connection.is_connected();
             boolean is_logged_in = connection.login();
@@ -194,8 +190,9 @@ public class SynologyAudioStationHandler extends BaseThingHandler {
                 updateStatus(ThingStatus.ONLINE);
             } else {
                 updateStatus(ThingStatus.OFFLINE);
-                logger.info("Failed to login remote player with name {} (is_logged_in: {}, has_player: {}, is_connected: {})",
+                logger.error("Failed to created connection for remote player with name {} (is_logged_in: {}, has_player: {}, is_connected: {})",
                         config.name, is_logged_in, has_player, is_connected);
+                throw new RuntimeException();
             }
 
             if (refreshJob == null || refreshJob.isCancelled()) {
@@ -205,8 +202,7 @@ public class SynologyAudioStationHandler extends BaseThingHandler {
             }
         });
 
-        // logger.debug("Finished initializing!");
-        logger.info("Finish initialization of remote player with name {}", config.name);
+        logger.debug("Finish initialization of remote player with name {}", config.name);
 
         // Note: When initialization can NOT be done set the status with more details for further
         // analysis. See also class ThingStatusDetail for all available status details.
@@ -217,7 +213,7 @@ public class SynologyAudioStationHandler extends BaseThingHandler {
 
     @Override
     public void dispose() {
-        logger.info("Dispose remote player with name {}", config.name);
+        logger.debug("Dispose remote player with name {}", config.name);
         if (refreshJob != null && !refreshJob.isCancelled()) {
             if (refreshJob.cancel(true)) {
                 refreshJob = null;

@@ -12,24 +12,18 @@
  */
 package org.openhab.binding.synologyaudiostation.internal;
 
-import static org.openhab.binding.synologyaudiostation.internal.SynologyAudioStationBindingConstants.*;
-
 import java.lang.String;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeoutException;
 import java.util.Map;
 import java.util.HashMap;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
-import org.eclipse.jdt.annotation.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import static org.eclipse.jetty.http.HttpMethod.GET;
 import static org.eclipse.jetty.http.HttpStatus.*;
 import org.eclipse.jetty.client.HttpClient;
-import org.eclipse.jetty.client.HttpResponseException;
 import org.eclipse.jetty.client.api.ContentResponse;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
 
@@ -57,17 +51,21 @@ public class SynologyAudioStationConnector {
     private String playerId = "";
 
     public SynologyAudioStationConnector(String username, String password, String url) {
-        logger.info("Create Audio Station connection for user {} with URL {}", username, url);
         this.username = username;
         this.password = password;
-        this.url = url;
+        if (url.charAt(url.length() - 1) == '/') {
+            this.url = url.substring(0, url.length() - 1);
+        } else {
+            this.url = url;
+        }
+        logger.info("Create Audio Station connection for user {} with URL {}", username, url);
 
         SslContextFactory sslContextFactory = new SslContextFactory(true);
         httpClient = new HttpClient(sslContextFactory);
         try {
             httpClient.start();
         } catch (Exception e) {
-            logger.info("Failed to start http client ({})", e.getMessage());
+            logger.error("Failed to start http client ({})", e.getMessage());
             throw new RuntimeException();
         }
     }
@@ -77,7 +75,7 @@ public class SynologyAudioStationConnector {
             send_request("");
             return true;
         } catch (Exception e) {
-            logger.info("Failed to connect ({})", e.getMessage());
+            logger.error("Failed to connect to {} ({})", url, e.getMessage());
             return false;
         }
     }
@@ -105,7 +103,7 @@ public class SynologyAudioStationConnector {
             this.playerId = get_player_id(content);
             return true;
         } catch (Exception e) {
-            logger.info("Failed to get player id for remote player {} ({})", name, e.getMessage());
+            logger.error("Failed to get player id for remote player {} ({})", name, e.getMessage());
             return false;
         }
     }
@@ -115,7 +113,7 @@ public class SynologyAudioStationConnector {
         try {
             send_request(command);
         } catch (Exception e) {
-            logger.info("Failed to send command {} ({})", action, e.getMessage());
+            logger.error("Failed to send command {} ({})", action, e.getMessage());
         }
     }
 
@@ -124,7 +122,7 @@ public class SynologyAudioStationConnector {
         try {
             send_request(command);
         } catch (Exception e) {
-            logger.info("Failed to set volume to {} ({})", volume, e.getMessage());
+            logger.error("Failed to set volume to {} ({})", volume, e.getMessage());
         }
     }
 
@@ -144,7 +142,7 @@ public class SynologyAudioStationConnector {
             status.put("album_artist", tag.getAsJsonObject().get("album_artist").getAsString());
             status.put("artist", tag.getAsJsonObject().get("artist").getAsString());
         } catch (Exception e) {
-            logger.info("Failed to update status with request {} ({})", command, e.getMessage());
+            logger.error("Failed to update status with request {} ({})", command, e.getMessage());
             throw new RuntimeException();
         }
         return status;
@@ -162,10 +160,10 @@ public class SynologyAudioStationConnector {
                     return id;
                 }
             }
-            logger.info("Failed remote player {} in list of players", this.name);
+            logger.error("Failed remote player {} in list of players", this.name);
             throw new RuntimeException();
         } catch (Exception e) {
-            logger.info("Failed parse json with player id for remote player {} ({})", this.name, e.getMessage());
+            logger.error("Failed parse json with player id for remote player {} ({})", this.name, e.getMessage());
             throw new RuntimeException();
         }
     }
@@ -180,11 +178,11 @@ public class SynologyAudioStationConnector {
             success = obj.get("success").getAsBoolean();
             data = obj.get("data");
         } catch (Exception e) {
-            logger.info("Failed to parse json {}", json);
+            logger.error("Failed to parse json {}", json);
             throw new RuntimeException();
         }
         if (!success) {
-            logger.info("Failed to get valid data from json {}", json);
+            logger.error("Failed to get valid data from json {}", json);
             throw new RuntimeException();
         }
         return data;
@@ -197,7 +195,7 @@ public class SynologyAudioStationConnector {
             String sid = obj.get("sid").getAsString();
             return sid;
         } catch (Exception e) {
-            logger.info("Failed to get session id ({})", e.getMessage());
+            logger.error("Failed to get session id ({})", e.getMessage());
             throw new RuntimeException();
         }
     }
@@ -207,19 +205,20 @@ public class SynologyAudioStationConnector {
         try {
             String content = send_request(command);
             sessionId = get_session_id(content);
-            logger.info("Logged in user {}", username);
+            logger.info("Logged in user {} to Audio Station on {}", username, url);
             return true;
         } catch (Exception e) {
-            logger.info("Failed to login user {} ({})", username, e.getMessage());
+            logger.error("Failed to login user {} ({})", username, e.getMessage());
             return false;
         }
     }
 
     public boolean logout() {
-        String command = String.format("/webapi/auth.cgi?api=SYNO.API.Auth&method=login&version=1&method=logout&_sid=%s&session=AudioStation", sessionId);
+        String command = String.format("/webapi/auth.cgi?api=SYNO.API.Auth&version=1&method=logout&_sid=%s&session=AudioStation", sessionId);
         try {
+            send_request(command);
         } catch (Exception e) {
-            logger.info("Failed to logout user {} ({})", username, e.getMessage());
+            logger.error("Failed to logout user {} ({})", username, e.getMessage());
             return false;
         }
         return true;
@@ -227,19 +226,20 @@ public class SynologyAudioStationConnector {
 
     private String send_request(String command) {
         String request = url + command;
+        String requestNoPassword = request.replace(password, "*****").replace(sessionId, "*****");
         final long timeout = 5;
-        logger.debug("Send request {}", request);
+        logger.debug("Send request {}", requestNoPassword);
         try {
             ContentResponse contentResponse = httpClient.newRequest(request).method(GET).timeout(timeout, TimeUnit.SECONDS).send();
             int httpStatus = contentResponse.getStatus();
             if (httpStatus != OK_200) {
-                logger.info("Failed to send request (status {})", httpStatus);
+                logger.error("Failed to send request {} (status {})", requestNoPassword, httpStatus);
                 throw new RuntimeException();
             }
             String content = contentResponse.getContentAsString();
             return content;
-        } catch (ExecutionException | InterruptedException | TimeoutException e) {
-            logger.info("Failed to send request {} ({})", request, e.getMessage());
+        } catch (Exception e) {
+            logger.error("Failed to send request {} ({})", requestNoPassword, e.getMessage());
             throw new RuntimeException();
         }
     }

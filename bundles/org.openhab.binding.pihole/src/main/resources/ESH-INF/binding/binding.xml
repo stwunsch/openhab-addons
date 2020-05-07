@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<binding:binding id="pihole" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:binding="https://openhab.org/schemas/binding/v1.0.0"
+	xsi:schemaLocation="https://openhab.org/schemas/binding/v1.0.0 https://openhab.org/schemas/binding-1.0.0.xsd">
+
+	<name>PiHole Binding</name>
+	<description>This is the binding for PiHole.</description>
+	<author>Stefan Wunsch</author>
+
+	<config-description>
+		<parameter name="url" type="text">
+			<label>URL</label>
+			<description>PiHole URL</description>
+			<required>true</required>
+		</parameter>
+		<parameter name="token" type="text">
+			<context>password</context>
+			<label>API token</label>
+			<description>Token to access the full PiHole web API</description>
+			<required>true</required>
+		</parameter>
+		<parameter name="refreshInterval" type="integer" min="0" max="9999">
+			<label>Refresh interval</label>
+			<description>Interval for refreshing the data in seconds (0=disabled)</description>
+			<default>5</default>
+			<required>true</required>
+		</parameter>
+	</config-description>
+
+</binding:binding>

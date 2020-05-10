@@ -31,6 +31,17 @@ public class PiHoleBindingConstants {
 
     // List of all Channel ids
     public static final String CHANNEL_ACTION_SWITCH = "action#switch";
+    public static final String CHANNEL_ACTION_DISABLE = "action#disable";
+
     public static final String CHANNEL_SUMMARY_STATUS = "summary#status";
     public static final String CHANNEL_SUMMARY_DNSQUERIESTODAY = "summary#dns_queries_today";
+    public static final String CHANNEL_SUMMARY_DOMAINSBEINGBLOCKED = "summary#domains_being_blocked";
+    public static final String CHANNEL_SUMMARY_ADSBLOCKEDTODAY = "summary#ads_blocked_today";
+    public static final String CHANNEL_SUMMARY_ADSPERCENTAGETODAY = "summary#ads_percentage_today";
+    public static final String CHANNEL_SUMMARY_UNIQUEDOMAINS = "summary#unique_domains";
+    public static final String CHANNEL_SUMMARY_QUERIESFORWARDED = "summary#queries_forwarded";
+    public static final String CHANNEL_SUMMARY_QUERIESCACHED= "summary#queries_cached";
+    public static final String CHANNEL_SUMMARY_CLIENTSEVERSEEN = "summary#clients_ever_seen";
+    public static final String CHANNEL_SUMMARY_UNIQUECLIENTS = "summary#unique_clients";
+    public static final String CHANNEL_SUMMARY_PRIVACYLEVEL = "summary#privacy_level";
 }

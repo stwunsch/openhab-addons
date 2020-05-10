@@ -7,7 +7,6 @@
 	<!-- PiHole Thing Type -->
 	<thing-type id="server">
 		<label>PiHole server</label>
-		<description>PiHole server</description>
 
 		<channel-groups>
 			<channel-group id="summary" typeId="summary" />
@@ -21,6 +20,15 @@
 		<channels>
 			<channel id="status" typeId="status" />
 			<channel id="dns_queries_today" typeId="dns_queries_today" />
+			<channel id="domains_being_blocked" typeId="domains_being_blocked" />
+			<channel id="ads_blocked_today" typeId="ads_blocked_today" />
+			<channel id="ads_percentage_today" typeId="ads_percentage_today" />
+			<channel id="unique_domains" typeId="unique_domains" />
+			<channel id="queries_forwarded" typeId="queries_forwarded" />
+			<channel id="queries_cached" typeId="queries_cached" />
+			<channel id="clients_ever_seen" typeId="clients_ever_seen" />
+			<channel id="unique_clients" typeId="unique_clients" />
+			<channel id="privacy_level" typeId="privacy_level" />
 		</channels>
 	</channel-group-type>
 
@@ -28,25 +36,76 @@
 		<label>Action</label>
 		<channels>
 			<channel id="switch" typeId="switch" />
+			<channel id="disable" typeId="disable" />
 		</channels>
 	</channel-group-type>
 
 	<channel-type id="status">
 		<item-type>String</item-type>
 		<label>Status</label>
-		<description>Status</description>
+		<description>Status of the ad blocking</description>
 	</channel-type>
 
 	<channel-type id="switch">
 		<item-type>Switch</item-type>
 		<label>Switch</label>
-		<description>Switch status</description>
+		<description>Switch status of the ad blocking</description>
+	</channel-type>
+
+	<channel-type id="disable">
+		<item-type>Number</item-type>
+		<label>Disable</label>
+		<description>Disable ad blocking for given number of seconds (0=permanent)</description>
 	</channel-type>
 
 	<channel-type id="dns_queries_today">
 		<item-type>Number</item-type>
 		<label>DNS queries today</label>
-		<description>DNS queries today</description>
+	</channel-type>
+
+	<channel-type id="domains_being_blocked">
+		<item-type>Number</item-type>
+		<label>Domains being blocked</label>
+	</channel-type>
+
+	<channel-type id="ads_blocked_today">
+		<item-type>Number</item-type>
+		<label>Ads blocked today</label>
+	</channel-type>
+
+	<channel-type id="ads_percentage_today">
+		<item-type>Number</item-type>
+		<label>Ads percentage today</label>
+	</channel-type>
+
+	<channel-type id="unique_domains">
+		<item-type>Number</item-type>
+		<label>Unique domains</label>
+	</channel-type>
+
+	<channel-type id="queries_forwarded">
+		<item-type>Number</item-type>
+		<label>Queries forwarded</label>
+	</channel-type>
+
+	<channel-type id="queries_cached">
+		<item-type>Number</item-type>
+		<label>Queries cached</label>
+	</channel-type>
+
+	<channel-type id="clients_ever_seen">
+		<item-type>Number</item-type>
+		<label>Clients ever seen</label>
+	</channel-type>
+
+	<channel-type id="unique_clients">
+		<item-type>Number</item-type>
+		<label>Unique clients</label>
+	</channel-type>
+
+	<channel-type id="privacy_level">
+		<item-type>Number</item-type>
+		<label>Privacy level</label>
 	</channel-type>
 
 </thing:thing-descriptions>

@@ -48,7 +48,7 @@ public class PiHoleHandler extends BaseThingHandler {
     private static final long INITIAL_DELAY_IN_SECONDS = 15;
 
     //private @Nullable PiHoleConfiguration config;
-    final private @Nullable PiHoleConnector connection;
+    final private PiHoleConnector connection;
     private @Nullable ScheduledFuture<?> refreshJob;
 
     final private int refreshInterval;
@@ -67,6 +67,15 @@ public class PiHoleHandler extends BaseThingHandler {
                     enable();
                 } else if (command == OnOffType.OFF) {
                     disable(0);
+                }
+            }
+        } else if (CHANNEL_ACTION_DISABLE.equals(channelUID.getId())) {
+            if (command instanceof DecimalType) {
+                int seconds = ((DecimalType)command).intValue();
+                if (seconds >= 0) {
+                    disable(seconds);
+                } else {
+                    logger.warn("Cannot disable Pi-Hole with seconds smaller than zero (got {})", seconds);
                 }
             }
         }
@@ -121,6 +130,15 @@ public class PiHoleHandler extends BaseThingHandler {
         }
         setStatusChannels(summary.get("status"));
         updateState(CHANNEL_SUMMARY_DNSQUERIESTODAY, new DecimalType(summary.get("dns_queries_today")));
+        updateState(CHANNEL_SUMMARY_DOMAINSBEINGBLOCKED, new DecimalType(summary.get("domains_being_blocked")));
+        updateState(CHANNEL_SUMMARY_ADSBLOCKEDTODAY, new DecimalType(summary.get("ads_blocked_today")));
+        updateState(CHANNEL_SUMMARY_ADSPERCENTAGETODAY, new DecimalType(summary.get("ads_percentage_today")));
+        updateState(CHANNEL_SUMMARY_UNIQUEDOMAINS, new DecimalType(summary.get("unique_domains")));
+        updateState(CHANNEL_SUMMARY_QUERIESFORWARDED, new DecimalType(summary.get("queries_forwarded")));
+        updateState(CHANNEL_SUMMARY_QUERIESCACHED, new DecimalType(summary.get("queries_cached")));
+        updateState(CHANNEL_SUMMARY_CLIENTSEVERSEEN, new DecimalType(summary.get("clients_ever_seen")));
+        updateState(CHANNEL_SUMMARY_UNIQUECLIENTS, new DecimalType(summary.get("unique_clients")));
+        updateState(CHANNEL_SUMMARY_PRIVACYLEVEL, new DecimalType(summary.get("privacy_level")));
     }
 
     @Override

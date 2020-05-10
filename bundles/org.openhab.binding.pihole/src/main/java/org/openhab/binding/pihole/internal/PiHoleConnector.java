@@ -78,6 +78,15 @@ public class PiHoleConnector {
         Map<String, String> summary = new HashMap<String, String>();
         summary.put("status", obj.get("status").getAsString());
         summary.put("dns_queries_today", obj.get("dns_queries_today").getAsString());
+        summary.put("domains_being_blocked", obj.get("domains_being_blocked").getAsString());
+        summary.put("ads_blocked_today", obj.get("ads_blocked_today").getAsString());
+        summary.put("ads_percentage_today", obj.get("ads_percentage_today").getAsString());
+        summary.put("unique_domains", obj.get("unique_domains").getAsString());
+        summary.put("queries_forwarded", obj.get("queries_forwarded").getAsString());
+        summary.put("queries_cached", obj.get("queries_cached").getAsString());
+        summary.put("clients_ever_seen", obj.get("clients_ever_seen").getAsString());
+        summary.put("unique_clients", obj.get("unique_clients").getAsString());
+        summary.put("privacy_level", obj.get("privacy_level").getAsString());
         return summary;
     }
 

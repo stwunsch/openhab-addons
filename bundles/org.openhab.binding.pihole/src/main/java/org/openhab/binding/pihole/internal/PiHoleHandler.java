@@ -29,6 +29,8 @@ import org.eclipse.smarthome.core.types.Command;
 import org.eclipse.smarthome.core.types.RefreshType;
 import org.eclipse.smarthome.core.library.types.StringType;
 import org.eclipse.smarthome.core.library.types.DecimalType;
+import org.eclipse.smarthome.core.library.types.OnOffType;
+import org.eclipse.smarthome.core.types.UnDefType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -59,20 +61,54 @@ public class PiHoleHandler extends BaseThingHandler {
 
     @Override
     public void handleCommand(ChannelUID channelUID, Command command) {
-        if (CHANNEL_SUMMARY_STATUS.equals(channelUID.getId())) {
-            //if (command instanceof RefreshType) {} // no explicit data refresh possible
-
-            // TODO: handle command
-
-            // Note: if communication with thing fails for some reason,
-            // indicate that by setting the status with detail information:
-            // updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.COMMUNICATION_ERROR,
-            // "Could not control device at IP address x.x.x.x");
+        if (CHANNEL_ACTION_SWITCH.equals(channelUID.getId())) {
+            if (command instanceof OnOffType) {
+                if (command == OnOffType.ON) {
+                    enable();
+                } else if (command == OnOffType.OFF) {
+                    disable(0);
+                }
+            }
         }
+    }
+
+    private void enable() {
+        logger.info("Enable PiHole");
+        String status;
+        try {
+            status = connection.enable();
+        } catch (Exception e) {
+            logger.warn("Failed to enable PiHole ({})", e.getMessage());
+            return;
+        }
+        setStatusChannels(status);
+    }
+
+    private void disable(int seconds) {
+        logger.info("Disable PiHole for {} seconds (0=permanent)", seconds);
+        String status;
+        try {
+            status = connection.disable(seconds);
+        } catch (Exception e) {
+            logger.warn("Failed to disable PiHole for {} seconds ({})", seconds, e.getMessage());
+            return;
+        }
+        setStatusChannels(status);
     }
 
     public void updateChannels() {
         updateSummary();
+    }
+
+    private void setStatusChannels(String status) {
+        updateState(CHANNEL_SUMMARY_STATUS, new StringType(status));
+        if (status.equals("enabled")) {
+            updateState(CHANNEL_ACTION_SWITCH, OnOffType.ON);
+        } else if (status.equals("disabled")) {
+            updateState(CHANNEL_ACTION_SWITCH, OnOffType.OFF);
+        } else {
+            updateState(CHANNEL_ACTION_SWITCH, UnDefType.UNDEF);
+        }
     }
 
     private void updateSummary() {
@@ -83,7 +119,7 @@ public class PiHoleHandler extends BaseThingHandler {
             logger.warn("Failed to get summary ({})", e.getMessage());
             return;
         }
-        updateState(CHANNEL_SUMMARY_STATUS, new StringType(summary.get("status")));
+        setStatusChannels(summary.get("status"));
         updateState(CHANNEL_SUMMARY_DNSQUERIESTODAY, new DecimalType(summary.get("dns_queries_today")));
     }
 

@@ -44,8 +44,8 @@ public class PiHoleConnector {
     private final Logger logger = LoggerFactory.getLogger(PiHoleConnector.class);
 
     private HttpClient httpClient;
-    private @Nullable String url;
-    private @Nullable String token;
+    private String url = "";
+    private String token = "";
     private int timeout;
     JsonParser parser;
 
@@ -70,20 +70,20 @@ public class PiHoleConnector {
     }
 
     public Map<String, String> getSummary() {
-        String content = sendRequest(url + "/admin/api.php?summary");
+        String content = sendRequest(url + "/admin/api.php?summaryRaw");
 
         JsonElement element = parser.parse(content);
         JsonObject obj = element.getAsJsonObject();
 
         Map<String, String> summary = new HashMap<String, String>();
         summary.put("status", obj.get("status").getAsString());
-        summary.put("dns_queries_today", obj.get("dns_queries_today").getAsString().replace(",", ""));
+        summary.put("dns_queries_today", obj.get("dns_queries_today").getAsString());
         return summary;
     }
 
     public boolean isConnected() {
         try {
-            sendRequest("");
+            sendRequest(url);
             return true;
         } catch (Exception e) {
             logger.warn("Failed to send request to test connection to {} ({})", url, e.getMessage());
@@ -104,5 +104,24 @@ public class PiHoleConnector {
             throw new RuntimeException("Request returned http status " + httpStatus);
         }
         return contentResponse.getContentAsString();
+    }
+
+    public String enable() {
+        return setStatus("enable");
+    }
+
+    public String disable(int seconds) {
+        String command = "disable";
+        if (seconds > 0) {
+            command += "=" + Integer.toString(seconds);
+        }
+        return setStatus(command);
+    }
+
+    private String setStatus(String command) {
+        String content = sendRequest(url + "/admin/api.php?" + command + "&auth=" + token);
+        JsonElement element = parser.parse(content);
+        JsonObject obj = element.getAsJsonObject();
+        return obj.get("status").getAsString();
     }
 }

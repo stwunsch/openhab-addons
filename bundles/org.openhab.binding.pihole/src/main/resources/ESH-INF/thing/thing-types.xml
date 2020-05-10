@@ -11,6 +11,7 @@
 
 		<channel-groups>
 			<channel-group id="summary" typeId="summary" />
+			<channel-group id="action" typeId="action" />
 		</channel-groups>
 
 	</thing-type>
@@ -23,10 +24,23 @@
 		</channels>
 	</channel-group-type>
 
+	<channel-group-type id="action">
+		<label>Action</label>
+		<channels>
+			<channel id="switch" typeId="switch" />
+		</channels>
+	</channel-group-type>
+
 	<channel-type id="status">
 		<item-type>String</item-type>
 		<label>Status</label>
 		<description>Status</description>
+	</channel-type>
+
+	<channel-type id="switch">
+		<item-type>Switch</item-type>
+		<label>Switch</label>
+		<description>Switch status</description>
 	</channel-type>
 
 	<channel-type id="dns_queries_today">

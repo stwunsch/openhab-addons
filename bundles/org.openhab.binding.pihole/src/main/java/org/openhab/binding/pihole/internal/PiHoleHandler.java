@@ -14,14 +14,21 @@ package org.openhab.binding.pihole.internal;
 
 import static org.openhab.binding.pihole.internal.PiHoleBindingConstants.*;
 
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
+import java.util.Map;
+
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
 import org.eclipse.smarthome.core.thing.ChannelUID;
 import org.eclipse.smarthome.core.thing.Thing;
 import org.eclipse.smarthome.core.thing.ThingStatus;
+import org.eclipse.smarthome.core.thing.ThingStatusDetail;
 import org.eclipse.smarthome.core.thing.binding.BaseThingHandler;
 import org.eclipse.smarthome.core.types.Command;
 import org.eclipse.smarthome.core.types.RefreshType;
+import org.eclipse.smarthome.core.library.types.StringType;
+import org.eclipse.smarthome.core.library.types.DecimalType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -36,18 +43,24 @@ public class PiHoleHandler extends BaseThingHandler {
 
     private final Logger logger = LoggerFactory.getLogger(PiHoleHandler.class);
 
-    private @Nullable PiHoleConfiguration config;
+    private static final long INITIAL_DELAY_IN_SECONDS = 15;
 
-    public PiHoleHandler(Thing thing) {
+    //private @Nullable PiHoleConfiguration config;
+    private @Nullable PiHoleConnector connection;
+    private @Nullable ScheduledFuture<?> refreshJob;
+
+    private int refreshInterval;
+
+    public PiHoleHandler(Thing thing, String url, String token, int refreshInterval) {
         super(thing);
+        connection = new PiHoleConnector(url, token, refreshInterval);
+        refreshInterval = refreshInterval;
     }
 
     @Override
     public void handleCommand(ChannelUID channelUID, Command command) {
-        if (CHANNEL_1.equals(channelUID.getId())) {
-            if (command instanceof RefreshType) {
-                // TODO: handle data refresh
-            }
+        if (CHANNEL_SUMMARY_STATUS.equals(channelUID.getId())) {
+            //if (command instanceof RefreshType) {} // no explicit data refresh possible
 
             // TODO: handle command
 
@@ -58,41 +71,49 @@ public class PiHoleHandler extends BaseThingHandler {
         }
     }
 
+    public void update() {
+        updateSummary();
+    }
+
+    private void updateSummary() {
+        Map<String, String> summary;
+        try {
+            summary = connection.getSummary();
+        } catch (Exception e) {
+            logger.warn("Failed to get summary ({})", e.getMessage());
+            return;
+        }
+        updateState(CHANNEL_SUMMARY_STATUS, new StringType(summary.get("status")));
+        updateState(CHANNEL_SUMMARY_DNSQUERIESTODAY, new DecimalType(summary.get("dns_queries_today")));
+    }
+
     @Override
     public void initialize() {
-        // logger.debug("Start initializing!");
-        config = getConfigAs(PiHoleConfiguration.class);
+        //config = getConfigAs(PiHoleConfiguration.class);
 
-        // TODO: Initialize the handler.
-        // The framework requires you to return from this method quickly. Also, before leaving this method a thing
-        // status from one of ONLINE, OFFLINE or UNKNOWN must be set. This might already be the real thing status in
-        // case you can decide it directly.
-        // In case you can not decide the thing status directly (e.g. for long running connection handshake using WAN
-        // access or similar) you should set status UNKNOWN here and then decide the real status asynchronously in the
-        // background.
-
-        // set the thing status to UNKNOWN temporarily and let the background task decide for the real status.
-        // the framework is then able to reuse the resources from the thing handler initialization.
-        // we set this upfront to reliably check status updates in unit tests.
         updateStatus(ThingStatus.UNKNOWN);
 
-        // Example for background initialization:
         scheduler.execute(() -> {
-            boolean thingReachable = true; // <background task with long running initialization here>
-            // when done do:
+            boolean thingReachable = connection.isConnected();
             if (thingReachable) {
                 updateStatus(ThingStatus.ONLINE);
             } else {
-                updateStatus(ThingStatus.OFFLINE);
+                updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.COMMUNICATION_ERROR, "Cannot connect to server");
+            }
+
+            if (refreshJob == null || refreshJob.isCancelled()) {
+                refreshJob = scheduler.scheduleWithFixedDelay(this::update, INITIAL_DELAY_IN_SECONDS,
+                        refreshInterval, TimeUnit.SECONDS);
             }
         });
+    }
 
-        // logger.debug("Finished initializing!");
-
-        // Note: When initialization can NOT be done set the status with more details for further
-        // analysis. See also class ThingStatusDetail for all available status details.
-        // Add a description to give user information to understand why thing does not work as expected. E.g.
-        // updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.CONFIGURATION_ERROR,
-        // "Can not access device as username and/or password are invalid");
+    @Override
+    public void dispose() {
+        if (refreshJob != null && !refreshJob.isCancelled()) {
+            if (refreshJob.cancel(true)) {
+                refreshJob = null;
+            }
+        }
     }
 }

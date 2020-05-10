@@ -4,29 +4,41 @@
 	xmlns:thing="https://openhab.org/schemas/thing-description/v1.0.0"
 	xsi:schemaLocation="https://openhab.org/schemas/thing-description/v1.0.0 https://openhab.org/schemas/thing-description-1.0.0.xsd">
 
-	<!-- Sample Thing Type -->
-	<thing-type id="sample">
-		<label>PiHole Binding Thing</label>
-		<description>Sample thing for PiHole Binding</description>
+	<!-- PiHole Thing Type -->
+	<thing-type id="server">
+		<label>PiHole server</label>
+		<description>PiHole server</description>
 
-		<channels>
-			<channel id="channel1" typeId="sample-channel" />
-		</channels>
-
-		<config-description>
-			<parameter name="config1" type="text" required="true">
-				<label>Sample Parameter</label>
-				<description>This is a sample text configuration parameter</description>
-			</parameter>
-		</config-description>
+		<channel-groups>
+			<channel-group id="summary" typeId="summary" />
+		</channel-groups>
 
 	</thing-type>
 
-	<!-- Sample Channel Type -->
-	<channel-type id="sample-channel">
-		<item-type>piholeItem</item-type>
-		<label>PiHole Binding Channel</label>
-		<description>Sample channel for PiHole Binding</description>
+	<channel-group-type id="summary">
+		<label>Summary</label>
+		<channels>
+			<channel id="status" typeId="status" />
+			<channel id="dns_queries_today" typeId="dns_queries_today" />
+		</channels>
+	</channel-group-type>
+
+	<channel-type id="status">
+		<item-type>String</item-type>
+		<label>Status</label>
+		<description>Status</description>
+		<state>
+			<options>
+				<option value="enabled">Enabled</option>
+				<option value="disabled">Disabled</option>
+			</options>
+		</state>
+	</channel-type>
+
+	<channel-type id="dns_queries_today">
+		<item-type>Number</item-type>
+		<label>DNS queries today</label>
+		<description>DNS queries today</description>
 	</channel-type>
 
 </thing:thing-descriptions>

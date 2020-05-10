@@ -12,15 +12,17 @@
  */
 package org.openhab.binding.pihole.internal;
 
+import org.eclipse.jdt.annotation.NonNullByDefault;
+
 /**
  * The {@link PiHoleConfiguration} class contains fields mapping thing configuration parameters.
  *
  * @author Stefan Wunsch - Initial contribution
  */
+@NonNullByDefault
 public class PiHoleConfiguration {
 
     /**
      * Sample configuration parameter. Replace with your own.
      */
-    public String config1;
 }

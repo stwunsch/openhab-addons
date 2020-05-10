@@ -27,8 +27,9 @@ public class PiHoleBindingConstants {
     private static final String BINDING_ID = "pihole";
 
     // List of all Thing Type UIDs
-    public static final ThingTypeUID THING_TYPE_SAMPLE = new ThingTypeUID(BINDING_ID, "sample");
+    public static final ThingTypeUID THING_TYPE_SERVER = new ThingTypeUID(BINDING_ID, "server");
 
     // List of all Channel ids
-    public static final String CHANNEL_1 = "channel1";
+    public static final String CHANNEL_SUMMARY_STATUS = "summary:status";
+    public static final String CHANNEL_SUMMARY_DNSQUERIESTODAY = "summary:dns_queries_today";
 }

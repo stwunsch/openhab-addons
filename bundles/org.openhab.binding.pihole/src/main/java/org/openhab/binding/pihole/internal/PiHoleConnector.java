@@ -12,6 +12,7 @@
  */
 package org.openhab.binding.pihole.internal;
 
+import java.lang.String;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.concurrent.TimeUnit;
@@ -49,24 +50,23 @@ public class PiHoleConnector {
     JsonParser parser;
 
     public PiHoleConnector(String url, String token, int refreshInterval) {
-        url = url;
         if (url.charAt(url.length() - 1) == '/') {
             this.url = url.substring(0, url.length() - 1);
         } else {
             this.url = url;
         }
-        token = token;
-        timeout = refreshInterval;
+        this.token = token;
+        this.timeout = refreshInterval;
 
         SslContextFactory sslContextFactory = new SslContextFactory(true);
-        httpClient = new HttpClient(sslContextFactory);
+        this.httpClient = new HttpClient(sslContextFactory);
         try {
             httpClient.start();
         } catch (Exception e) {
-            throw new RuntimeException("Failed to start http client: " + e.getMessage());
+            throw new RuntimeException("Failed to start http client (" + e.getMessage() + ")");
         }
 
-        parser = new JsonParser();
+        this.parser = new JsonParser();
     }
 
     public Map<String, String> getSummary() {
@@ -86,17 +86,18 @@ public class PiHoleConnector {
             sendRequest("");
             return true;
         } catch (Exception e) {
-            logger.warn("Failed to send test request to {} ({})", url, e.getMessage());
+            logger.warn("Failed to send request to test connection to {} ({})", url, e.getMessage());
             return false;
         }
     }
 
     private String sendRequest(String request) {
+        String notoken = request.replace(token, "*****");
         ContentResponse contentResponse;
         try {
             contentResponse = httpClient.newRequest(request).method(GET).timeout(timeout, TimeUnit.SECONDS).send();
         } catch (Exception e) {
-            throw new RuntimeException(e.getMessage());
+            throw new RuntimeException("Request " + notoken + " failed (" + e.getMessage() + ")");
         }
         int httpStatus = contentResponse.getStatus();
         if (httpStatus != OK_200) {

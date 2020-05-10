@@ -46,15 +46,15 @@ public class PiHoleHandler extends BaseThingHandler {
     private static final long INITIAL_DELAY_IN_SECONDS = 15;
 
     //private @Nullable PiHoleConfiguration config;
-    private @Nullable PiHoleConnector connection;
+    final private @Nullable PiHoleConnector connection;
     private @Nullable ScheduledFuture<?> refreshJob;
 
-    private int refreshInterval;
+    final private int refreshInterval;
 
     public PiHoleHandler(Thing thing, String url, String token, int refreshInterval) {
         super(thing);
-        connection = new PiHoleConnector(url, token, refreshInterval);
-        refreshInterval = refreshInterval;
+        this.connection = new PiHoleConnector(url, token, refreshInterval);
+        this.refreshInterval = refreshInterval;
     }
 
     @Override
@@ -71,7 +71,7 @@ public class PiHoleHandler extends BaseThingHandler {
         }
     }
 
-    public void update() {
+    public void updateChannels() {
         updateSummary();
     }
 
@@ -89,31 +89,35 @@ public class PiHoleHandler extends BaseThingHandler {
 
     @Override
     public void initialize() {
+        logger.info("Begin initialization");
         //config = getConfigAs(PiHoleConfiguration.class);
 
         updateStatus(ThingStatus.UNKNOWN);
 
         scheduler.execute(() -> {
-            boolean thingReachable = connection.isConnected();
-            if (thingReachable) {
+            if (connection.isConnected()) {
                 updateStatus(ThingStatus.ONLINE);
             } else {
                 updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.COMMUNICATION_ERROR, "Cannot connect to server");
             }
 
             if (refreshJob == null || refreshJob.isCancelled()) {
-                refreshJob = scheduler.scheduleWithFixedDelay(this::update, INITIAL_DELAY_IN_SECONDS,
-                        refreshInterval, TimeUnit.SECONDS);
+                logger.info("Start job updating channels every {} seconds", refreshInterval);
+                refreshJob = scheduler.scheduleWithFixedDelay(this::updateChannels, INITIAL_DELAY_IN_SECONDS, refreshInterval, TimeUnit.SECONDS);
             }
+
+            logger.info("Finished initialization");
         });
     }
 
     @Override
     public void dispose() {
+        logger.info("Begin disposing handler");
         if (refreshJob != null && !refreshJob.isCancelled()) {
             if (refreshJob.cancel(true)) {
                 refreshJob = null;
             }
         }
+        logger.info("Finished disposing handler");
     }
 }

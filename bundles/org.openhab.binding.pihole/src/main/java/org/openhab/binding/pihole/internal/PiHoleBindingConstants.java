@@ -30,6 +30,6 @@ public class PiHoleBindingConstants {
     public static final ThingTypeUID THING_TYPE_SERVER = new ThingTypeUID(BINDING_ID, "server");
 
     // List of all Channel ids
-    public static final String CHANNEL_SUMMARY_STATUS = "summary:status";
-    public static final String CHANNEL_SUMMARY_DNSQUERIESTODAY = "summary:dns_queries_today";
+    public static final String CHANNEL_SUMMARY_STATUS = "summary#status";
+    public static final String CHANNEL_SUMMARY_DNSQUERIESTODAY = "summary#dns_queries_today";
 }

@@ -22,7 +22,7 @@
 		<parameter name="refreshInterval" type="integer" min="0" max="9999">
 			<label>Refresh interval</label>
 			<description>Interval for refreshing the data in seconds (0=disabled)</description>
-			<default>5</default>
+			<default>10</default>
 			<required>true</required>
 		</parameter>
 	</config-description>

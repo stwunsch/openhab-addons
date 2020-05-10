@@ -27,12 +27,6 @@
 		<item-type>String</item-type>
 		<label>Status</label>
 		<description>Status</description>
-		<state>
-			<options>
-				<option value="enabled">Enabled</option>
-				<option value="disabled">Disabled</option>
-			</options>
-		</state>
 	</channel-type>
 
 	<channel-type id="dns_queries_today">
